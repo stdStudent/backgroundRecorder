@@ -1,13 +1,10 @@
 package com.example.backgroundrecorder;
 
-import android.app.Notification;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.MediaRecorder;
-import android.os.Build;
+import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
 
@@ -18,6 +15,7 @@ import java.io.IOException;
 public class RecordingService extends Service {
     private MediaRecorder recorder;
     private String fileName;
+    private int recordingDuration;
 
     @Override
     public void onCreate() {
@@ -25,6 +23,7 @@ public class RecordingService extends Service {
 
         fileName = getExternalCacheDir().getAbsolutePath();
         fileName += "/recording" + getNextRecordingNumber() + ".ogg";
+        recordingDuration = getResources().getInteger(R.integer.N);
     }
 
     @Override
@@ -61,6 +60,24 @@ public class RecordingService extends Service {
         }
 
         recorder.start();
+
+        // Schedule the stopRecording() method to be called after the specified duration
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                stopRecording();
+                continueRecording();
+            }
+        }, recordingDuration * 1000); // Convert duration to milliseconds
+    }
+
+    private void continueRecording() {
+        // Generate a new filename for the new recording
+        fileName = getExternalCacheDir().getAbsolutePath();
+        fileName += "/recording" + getNextRecordingNumber() + ".ogg";
+
+        startRecording();
     }
 
     private String padNumberWithZeros(int number, int paddingLength) {
