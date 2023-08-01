@@ -21,6 +21,7 @@ public class RecordingService extends Service {
     public void onCreate() {
         super.onCreate();
 
+        recorder = new MediaRecorder();
         recordingDuration = getResources().getInteger(R.integer.N);
     }
 
@@ -48,7 +49,7 @@ public class RecordingService extends Service {
         fileName = getExternalCacheDir().getAbsolutePath();
         fileName += "/recording" + getNextRecordingNumber() + ".ogg";
 
-        recorder = new MediaRecorder();
+        if (recorder == null) recorder = new MediaRecorder();
         recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
         recorder.setOutputFormat(MediaRecorder.OutputFormat.OGG);
         recorder.setOutputFile(fileName);
@@ -57,7 +58,7 @@ public class RecordingService extends Service {
         try {
             recorder.prepare();
         } catch (IOException e) {
-            Log.e("RecordingService::startRecording()", "prepare() failed");
+            Log.e("RecordingService::startRecording()", "MediaRecorder::prepare() failed");
         }
 
         recorder.start();
@@ -67,7 +68,7 @@ public class RecordingService extends Service {
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                stopRecording();
+                resetRecording();
                 startRecording();
             }
         }, recordingDuration * 1000); // Convert duration to milliseconds
@@ -104,9 +105,17 @@ public class RecordingService extends Service {
         return paddedNumber;
     }
 
+    private void resetRecording() {
+        if (recorder != null) {
+            recorder.reset();
+        }
+    }
+
     private void stopRecording() {
-        recorder.stop();
-        recorder.release();
-        recorder = null;
+        if (recorder != null) {
+            recorder.stop();
+            recorder.release();
+            recorder = null;
+        }
     }
 }
