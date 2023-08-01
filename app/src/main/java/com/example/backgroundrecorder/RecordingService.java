@@ -21,8 +21,6 @@ public class RecordingService extends Service {
     public void onCreate() {
         super.onCreate();
 
-        fileName = getExternalCacheDir().getAbsolutePath();
-        fileName += "/recording" + getNextRecordingNumber() + ".ogg";
         recordingDuration = getResources().getInteger(R.integer.N);
     }
 
@@ -47,6 +45,9 @@ public class RecordingService extends Service {
     }
 
     private void startRecording() {
+        fileName = getExternalCacheDir().getAbsolutePath();
+        fileName += "/recording" + getNextRecordingNumber() + ".ogg";
+
         recorder = new MediaRecorder();
         recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
         recorder.setOutputFormat(MediaRecorder.OutputFormat.OGG);
@@ -67,17 +68,9 @@ public class RecordingService extends Service {
             @Override
             public void run() {
                 stopRecording();
-                continueRecording();
+                startRecording();
             }
         }, recordingDuration * 1000); // Convert duration to milliseconds
-    }
-
-    private void continueRecording() {
-        // Generate a new filename for the new recording
-        fileName = getExternalCacheDir().getAbsolutePath();
-        fileName += "/recording" + getNextRecordingNumber() + ".ogg";
-
-        startRecording();
     }
 
     private String padNumberWithZeros(int number, int paddingLength) {
