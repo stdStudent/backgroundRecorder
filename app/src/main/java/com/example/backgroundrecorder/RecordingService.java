@@ -5,6 +5,7 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.media.MediaRecorder;
 import android.os.Build;
 import android.os.IBinder;
@@ -23,7 +24,7 @@ public class RecordingService extends Service {
         super.onCreate();
 
         fileName = getExternalCacheDir().getAbsolutePath();
-        fileName += "/recordtest.ogg";
+        fileName += "/recording" + getNextRecordingNumber() + ".ogg";
     }
 
     @Override
@@ -60,6 +61,37 @@ public class RecordingService extends Service {
         }
 
         recorder.start();
+    }
+
+    private String padNumberWithZeros(int number, int paddingLength) {
+        String numberString = String.valueOf(number);
+
+        if (numberString.length() >= paddingLength) {
+            return numberString;
+        }
+
+        StringBuilder paddedNumber = new StringBuilder();
+        int numZeros = paddingLength - numberString.length();
+
+        for (int i = 0; i < numZeros; i++) {
+            paddedNumber.append("0");
+        }
+
+        paddedNumber.append(numberString);
+        return paddedNumber.toString();
+    }
+
+    private String getNextRecordingNumber() {
+        SharedPreferences preferences = getSharedPreferences("RecordingPrefs", MODE_PRIVATE);
+        int currentNumber = preferences.getInt("currentNumber", 0);
+        int nextNumber = currentNumber + 1;
+
+        String paddedNumber = padNumberWithZeros(nextNumber, 3);
+
+        // Update the current number for the next recording
+        preferences.edit().putInt("currentNumber", nextNumber).apply();
+
+        return paddedNumber;
     }
 
     private void stopRecording() {
